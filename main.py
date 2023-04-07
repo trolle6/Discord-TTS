@@ -4,20 +4,32 @@ from discord.ext import commands
 import boto3
 import asyncio
 
+# Discord bot settings
 TOKEN = 'Discord-Bot-Token'
 GUILD = 'Server-Name'
+
+# AWS settings
 AWS_ACCESS_KEY_ID = 'AWS-Access-Key'
 AWS_SECRET_ACCESS_KEY = 'AWS-Secret-Key'
+AWS_REGION = 'Region-Code'
 
-polly = boto3.client('polly', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name='Region-Code')
+# Boto3 Polly client
+polly = boto3.client('polly', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=AWS_REGION)
 
+# Discord bot settings
 intents = discord.Intents().all()
 intents.members = True
 bot = commands.Bot(command_prefix='', intents=intents)
 
+# Message queue settings
 message_queue = asyncio.Queue()
 is_speaking = False  # flag to check if bot is currently speaking
 
+# Whitelist settings
+whitelist = ['User1#0001', 'User2#0002', 'User3#0003']
+whitelist_role_name = 'Role-Name' # the name of the role that can add to the whitelist
+
+# Discord bot event handlers
 async def speak_message(vc):
     global is_speaking
     while True:
@@ -39,9 +51,7 @@ async def queue_messages(queue):
         # do something with message
         print(message)
 
-whitelist = ['User1#0001', 'User2#0002', 'User3#0003']
-whitelist_role_name = 'Role-Name' # the name of the role that can add to the whitelist
-
+# Discord bot commands
 @bot.command(name='add_whitelist')
 @commands.has_role(whitelist_role_name)
 async def add_whitelist(ctx, user):
@@ -51,6 +61,7 @@ async def add_whitelist(ctx, user):
     else:
         await ctx.send(f"{user} is already in the whitelist.")
 
+# Discord bot event handlers
 @bot.event
 async def on_message(message):
     global is_speaking
@@ -69,6 +80,7 @@ async def on_message(message):
                 await message.channel.send('Sorry, you do not have access to use this bot.')
     await bot.process_commands(message)
 
+# Asynchronous tasks
 async def check_voice_channels():
     while True:
         for vc in bot.voice_clients:
@@ -77,7 +89,3 @@ async def check_voice_channels():
         await asyncio.sleep(4)
 
 async def check_empty_vc():
-    while True:
-        for vc in bot.voice_clients:
-            if len(vc.channel.members) == 1 and vc.channel.members[0] == bot.user:  # only bot is in the channel
-                await vc.disconnect()
