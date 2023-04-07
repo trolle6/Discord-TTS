@@ -69,29 +69,15 @@ async def on_message(message):
                 await message.channel.send('Sorry, you do not have access to use this bot.')
     await bot.process_commands(message)
 
-    async def check_voice_channels():
-        while True:
-            for vc in bot.voice_clients:
-                if not vc.is_playing() and not vc.is_paused() and not vc.is_connected():
-                    await vc.disconnect()
-            await asyncio.sleep(4)
-
-    asyncio.ensure_future(check_voice_channels())
+async def check_voice_channels():
+    while True:
+        for vc in bot.voice_clients:
+            if not vc.is_playing() and not vc.is_paused() and not vc.is_connected():
+                await vc.disconnect()
+        await asyncio.sleep(4)
 
 async def check_empty_vc():
     while True:
         for vc in bot.voice_clients:
-            if len(vc.channel.members) == 1:  # only bot is in the channel
+            if len(vc.channel.members) == 1 and vc.channel.members[0] == bot.user:  # only bot is in the channel
                 await vc.disconnect()
-        await asyncio.sleep(60)  # check every minute
-
-async def on_voice_state_update(member, before, after):
-    if member == bot.user:
-        if before.channel and not after.channel:  # bot was disconnected from a voice channel
-            await message_queue.put("I was disconnected from the voice channel.")
-        elif not before.channel and after.channel:  # bot was connected to a voice channel
-            asyncio.ensure_future(check_empty_vc())
-
-bot.add_listener(on_voice_state_update)
-
-bot.run(TOKEN)
