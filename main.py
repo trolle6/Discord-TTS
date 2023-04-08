@@ -10,7 +10,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 # Boto3 Polly client
-polly = boto3.client('polly', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=AWS_REGION)
+polly = boto3.client('polly', aws_access_key_id=config['AWS']['ACCESS_KEY_ID'], aws_secret_access_key=config['AWS']['SECRET_ACCESS_KEY'], region_name=config['AWS']['REGION'])
 
 # Discord bot settings
 intents = discord.Intents().all()
@@ -46,7 +46,7 @@ async def queue_messages(queue):
 
 # Discord bot commands
 @bot.command(name='add_whitelist')
-@commands.has_role('whitelist_role_name') # change to actual role name
+@commands.has_role(config['DISCORD']['WHITELIST_ROLE_NAME'])
 async def add_whitelist(ctx, user):
     if user not in whitelist:
         whitelist.append(user)
@@ -58,7 +58,7 @@ async def add_whitelist(ctx, user):
 @bot.event
 async def on_message(message):
     global is_speaking
-    if message.channel.name == 'channel_name': # change to actual channel name
+    if message.channel.name == config['DISCORD']['CHANNEL_NAME']:
         if not message.author.bot:
             if message.author.name + '#' + message.author.discriminator in whitelist:
                 if message.content.strip():
@@ -78,4 +78,4 @@ async def on_ready():
         print(f'{guild.name}(id: {guild.id})')
 
 bot.loop.create_task(queue_messages(message_queue))
-bot.run(TOKEN)
+bot.run(config['DISCORD']['TOKEN'])
