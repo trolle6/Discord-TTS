@@ -9,15 +9,6 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-TOKEN = config['TOKEN']
-GUILD = config['GUILD']
-AWS_ACCESS_KEY_ID = config['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = config['AWS_SECRET_ACCESS_KEY']
-AWS_REGION = config['AWS_REGION']
-whitelist = config['WHITELIST']
-whitelist_role_name = config['WHITELIST_ROLE_NAME']
-channel_name = config['CHANNEL_NAME']
-
 # Boto3 Polly client
 polly = boto3.client('polly', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=AWS_REGION)
 
@@ -55,7 +46,7 @@ async def queue_messages(queue):
 
 # Discord bot commands
 @bot.command(name='add_whitelist')
-@commands.has_role(whitelist_role_name)
+@commands.has_role('whitelist_role_name') # change to actual role name
 async def add_whitelist(ctx, user):
     if user not in whitelist:
         whitelist.append(user)
@@ -67,10 +58,24 @@ async def add_whitelist(ctx, user):
 @bot.event
 async def on_message(message):
     global is_speaking
-    if message.channel.name == channel_name:
+    if message.channel.name == 'channel_name': # change to actual channel name
         if not message.author.bot:
             if message.author.name + '#' + message.author.discriminator in whitelist:
                 if message.content.strip():
                     if not is_speaking:  # check if bot is currently speaking
                         await message_queue.put(message.content)
-                        if
+                        if message.author.voice and message.author.voice.channel:
+                            vc = await message.author.voice.channel.connect()
+                            bot.loop.create_task(speak_message(vc))
+                        else:
+                            await message.channel.send(f"{message.author.mention} Please join a voice channel first.")
+        await bot.process_commands(message)
+
+@bot.event
+async def on_ready():
+    for guild in bot.guilds:
+        print(f'{bot.user.name} has connected to Discord!')
+        print(f'{guild.name}(id: {guild.id})')
+
+bot.loop.create_task(queue_messages(message_queue))
+bot.run(TOKEN)
