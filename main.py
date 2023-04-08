@@ -9,15 +9,6 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-# Discord bot settings
-TOKEN = config['DISCORD']['TOKEN']
-TEXT_CHANNEL_NAME = config['DISCORD']['TEXT_CHANNEL_NAME']
-WHITELIST_ROLE_NAME = config['DISCORD']['WHITELIST_ROLE_NAME']
-
-# Boto3 Polly client
-AWS_ACCESS_KEY_ID = config['POLLY']['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = config['POLLY']['AWS_SECRET_ACCESS_KEY']
-AWS_REGION = config['POLLY']['AWS_REGION']
 polly = boto3.client('polly', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=AWS_REGION)
 
 # Message queue settings
